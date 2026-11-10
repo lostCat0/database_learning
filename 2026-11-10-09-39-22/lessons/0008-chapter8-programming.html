@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第8章 数据库编程 · 数据库课程</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<p class="meta">数据库课程 · 第 8 章 / 共 11 章 · 预计 40 分钟（含动手任务）</p>
+<h1>数据库编程：SQL 进阶为程序</h1>
+
+<p>交互式 SQL 一句一句敲，真实应用需要把 SQL 嵌进程序里跑批量逻辑。本章讲三种编程形态：
+<b>嵌入式 SQL、存储过程/函数、触发器</b>，以及连接两者的桥梁——<b>游标</b>。</p>
+
+<h2>一、嵌入式 SQL 与主语言的通信</h2>
+
+<p>把 SQL 语句嵌进 C/Java 等主语言中，两者「语言不通」，靠三样东西通信（简答必背）：</p>
+<dl>
+<dt>共享变量（主变量）</dt>
+<dd>主语言声明、SQL 可引用的变量，SQL 中用 <code>:变量名</code> 引用（加冒号区分列名）。</dd>
+<dt>游标（Cursor）</dt>
+<dd>SQL 的查询结果是<b>集合</b>，主语言只能<b>逐条</b>处理——游标把集合变成一行一行的游标记录。</dd>
+<dt>SQL 通信区（SQLCA）</dt>
+<dd>反馈执行状态（如 sqlcode），供主语言判断成功与否。</dd>
+</dl>
+
+<h2>二、存储过程与函数</h2>
+
+<p>存储过程是<b>存在数据库服务器里、预编译</b>的一段过程化 SQL（含 IF/WHILE/变量），应用端 <code>CALL</code> 调用。
+考点：它相比客户端逐句发 SQL 的优势——<b>预编译执行快、减少网络流量、封装业务逻辑、可授权</b>。</p>
+
+<pre><code>DELIMITER //
+CREATE PROCEDURE get_age(IN p_sno CHAR(4), OUT p_age INT)
+BEGIN
+  SELECT sage INTO p_age FROM student WHERE sno = p_sno;
+END //
+DELIMITER ;
+CALL get_age('S2', @age); SELECT @age;</code></pre>
+
+<p>函数（FUNCTION）与过程类似，但<b>必须 RETURN 一个值</b>，可用在 SELECT 表达式里。</p>
+
+<h2>三、游标：集合到单行的桥梁</h2>
+
+<pre><code>DECLARE cur CURSOR FOR SELECT sname FROM student;  -- 声明
+OPEN cur;                    -- 打开（执行查询）
+FETCH cur INTO v_name;       -- 逐行取
+CLOSE cur;                   -- 关闭</code></pre>
+
+<div class="exam">游标四步曲「声明 → 打开 → 逐行提取 → 关闭」是填空高频；为什么要游标（SQL 面向集合 vs 主语言面向单条记录）是简答高频。</div>
+
+<h2>四、触发器实战（衔接第5章）</h2>
+
+<p>第5章你在练习场写过触发器，本章在 MySQL 里写「真」的——注意 MySQL 触发器没有 CREATE TRIGGER ... EXECUTE 语法的独立动作体，过程体用 BEGIN...END 包裹，且不能由用户手动调用。</p>
+
+<h2>五、动手实践</h2>
+
+<div class="sql-pg"
+     data-setup="@demo8"
+     data-title="任务 · 行级触发器 + 事件审计"
+     data-task="sc 表每删除一行，触发器就把统计表 stat 的 total 减 1。先运行预设的 DELETE，再运行 SELECT total FROM stat 验证（初始 6 行，删 1 行应为 5）。"
+     data-hint="CREATE TRIGGER t_del AFTER DELETE ON sc BEGIN UPDATE stat SET total = total - 1; END; 预设里已写好 DELETE 与验证 SELECT，直接点运行即可。"
+     data-expect="5"><textarea>CREATE TRIGGER t_del AFTER DELETE ON sc
+BEGIN
+  UPDATE stat SET total = total - 1;
+END;
+DELETE FROM sc WHERE sno='S3';
+SELECT total FROM stat;</textarea></div>
+
+<p>存储过程和游标 SQLite 练习场不支持，请到本机 MySQL 完整体验（脚本里每个知识点都有可运行的完整例子）：</p>
+<pre><code>source D:/WorkBuddy_workspace/2026-11-10-09-39-22/assets/practice-ch8.sql</code></pre>
+<p>脚本包含：带 IN/OUT 参数的存储过程、IF 逻辑、游标四步曲逐行打印学生名、AFTER INSERT 审计触发器。</p>
+
+<h2>六、自测</h2>
+<div class="quiz" data-quiz='[{"q":"与客户端逐句发送 SQL 相比，存储过程的优势是？","opts":["语法更简单","无需数据库","执行效率高","自动建索引"],"a":2,"exp":"存储过程预编译后常驻服务器，执行快、网络开销小、可封装业务逻辑并被授权，这就是它的三大优势。"},{"q":"游标（CURSOR）在嵌入式 SQL 中的作用是？","opts":["逐行处理结果","批量创建表格","自动备份数据","建立加密通道"],"a":0,"exp":"SQL 查询结果是集合，主语言只能逐条处理，游标把集合结果转换为一行一行的记录供主语言逐个读取。"},{"q":"触发器 FOR EACH ROW 表示什么？","opts":["整表触发","逐行触发","库级触发","会话触发"],"a":1,"exp":"行级触发器：触发事件每影响到一行，触发动作就执行一次。与之相对的是语句级触发器（一条语句只触发一次）。"},{"q":"嵌入式 SQL 与主语言之间的数据传递靠什么？","opts":["临时文件","消息队列","共享变量","系统日志"],"a":2,"exp":"主变量（共享变量）在主语言声明、SQL 用冒号引用，是两者交换数据的桥梁；状态则通过 SQL 通信区（SQLCA）反馈。"}]'></div>
+
+<h2>七、下一步</h2>
+<div class="tip">
+<b>主资源推荐</b>：中国大学MOOC《数据库系统概论(高级篇)》<a href="https://www.icourse163.org/learn/RUC-1001964001">icourse163.org/learn/RUC-1001964001</a>「数据库编程」讲次。
+</div>
+<p>📖 新术语见 <a href="../reference/glossary.html">术语表</a>。本机 MySQL 的脚本务必跑一遍——存储过程和游标不亲手 CALL 一次永远记不牢。
+准备好了说「下一章」，进入<b>第9章：查询处理与查询优化</b>——揭开「为什么我的 SQL 跑得慢」的谜底。</p>
+
+<div class="lesson-nav">
+<a href="../index.html">🏠 课程首页</a>
+<a href="../lessons/0007-chapter7-design.html">← 第7章 数据库设计</a>
+<a href="0009-chapter9-optimization.html">第9章 查询优化 →</a>
+</div>
+</div>
+<script>window.DEMO_SETUP8 = "CREATE TABLE sc(sno TEXT, cno TEXT, grade INT, PRIMARY KEY(sno,cno));INSERT INTO sc VALUES('S1','C1',92),('S1','C2',85),('S1','C3',76),('S2','C1',78),('S2','C2',65),('S3','C3',88);CREATE TABLE stat(total INT);INSERT INTO stat VALUES(0);";</script>
+<script>window.DEMO_SETUP = window.DEMO_SETUP8;</script>
+<script src="../assets/sqljs/sql-wasm.js"></script>
+<script src="../assets/sqljs/sql-wasm-b64.js"></script>
+<script src="../assets/sql-playground.js"></script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

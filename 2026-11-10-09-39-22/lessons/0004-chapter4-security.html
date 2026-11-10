@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第4章 数据库安全性 · 数据库课程</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<p class="meta">数据库课程 · 第 4 章 / 共 11 章 · 预计 35 分钟（含动手任务）</p>
+<h1>数据库安全性：谁能看、谁能改</h1>
+
+<p>第3章你已经会写 SQL 了，但「会写」和「谁能写」是两回事。本章回答一个问题：
+<b>数据库如何防止非法使用和数据泄露</b>。这章内容较轻，考点集中在几个概念的对比上。</p>
+
+<div class="exam">安全性 vs 完整性（第5章）的辨析是经典简答题：安全性防止<b>非法用户和非法操作</b>（防外人），完整性防止<b>合法用户输入不合语义的数据</b>（防错误）。</div>
+
+<h2>一、数据库面临的安全威胁</h2>
+<ul>
+<li><b>非授权用户</b>恶意存取（窃取、篡改）</li>
+<li>合法用户的<b>越权操作</b></li>
+<li>数据在存储、传输中被截获</li>
+</ul>
+<p>数据库系统的安全模型一句话概括：<b>先验明正身（用户鉴别），再查权限（存取控制），最后留证据（审计）+ 兜底（加密）</b>。</p>
+
+<h2>二、安全性控制手段（考点主战场）</h2>
+
+<h3>1. 用户标识与鉴别</h3>
+<p>系统提供的最外层安全保护。方式：用户名+口令、IC 卡、生物特征。每个用户在系统中都有唯一的用户标识。</p>
+
+<h3>2. 存取控制（本章最核心考点）</h3>
+<table>
+<tr><th>机制</th><th>自主存取控制（DAC）</th><th>强制存取控制（MAC）</th></tr>
+<tr><td>权限由谁定</td><td>用户自己定义（可授权、可收回）</td><td>系统统一按<b>密级</b>强制执行，用户无权更改</td></tr>
+<tr><td>SQL 支持</td><td>GRANT / REVOKE</td><td>主体（用户/进程）有许可证级别，客体（表/数据）有密级</td></tr>
+<tr><td>规则</td><td>授权者 ≥ 被授权者的权限</td><td><b>许可证 ≥ 密级才可读；许可证 = 密级才可写</b></td></tr>
+<tr><td>缺点</td><td>权限可能被「转手」扩散</td><td>过于严格、实现开销大</td></tr>
+</table>
+
+<pre><code>-- GRANT 语法（背下来）
+GRANT &lt;权限列表&gt; ON &lt;对象&gt; TO &lt;用户&gt; [WITH GRANT OPTION];
+
+-- 例：把查询 student 表的权限给 U1，并允许他转授
+GRANT SELECT ON TABLE student TO U1 WITH GRANT OPTION;
+
+-- 收回权限
+REVOKE SELECT ON TABLE student FROM U1 [CASCADE | RESTRICT];</code></pre>
+
+<div class="exam">两个必背细节：① <b>WITH GRANT OPTION</b> 表示被授权者可以把权限转授他人；② 收回权限时转授链<b>级联回收</b>（CASCADE）——A 授权给 B，B 转授给 C，收回 B 的权限时 C 的也一并没了。</div>
+
+<h3>3. 视图机制</h3>
+<p>把敏感列/行藏在视图外，用户只能通过视图看到被允许的数据——第1章「外模式」的安全价值。视图机制是<b>间接</b>手段，最终还是要配合 GRANT 使用。</p>
+
+<h3>4. 审计（Audit）</h3>
+<p>把用户对数据库的所有操作自动记录到审计日志。审计是「事后追责」手段——因为启用审计很耗空间时间，通常作为<b>可选</b>设置。</p>
+
+<h3>5. 数据加密</h3>
+<p>防止数据在存储和传输中泄露：存储加密 + 传输加密。是最后一道防线。</p>
+
+<h2>三、动手实践</h2>
+
+<p>GRANT/REVOKE 涉及多用户切换，浏览器练习场做不了（SQLite 没有 DCL），但我们可以在练习场里体验<b>视图机制</b>的安全效果：</p>
+
+<div class="sql-pg"
+     data-setup="@demo"
+     data-title="任务 · 视图隐藏敏感数据"
+     data-task="假设 ssex、sage 是敏感信息。创建视图 v_public 只暴露 sno、sname，然后 SELECT * FROM v_public 验证确实看不到敏感列。"
+     data-hint="CREATE VIEW v_public AS SELECT sno, sname FROM student; 然后换行写 SELECT * FROM v_public;"
+     data-expect="S1,张三;S2,李四;S3,王五;S4,赵六"><textarea></textarea></div>
+
+<p>再来到你的<b>真实 MySQL</b> 里体验完整的多用户授权流程（本脚本需要 root 身份运行）：</p>
+<pre><code>source D:/WorkBuddy_workspace/2026-11-10-09-39-22/assets/practice-ch4.sql</code></pre>
+<p>脚本会创建 alice、bob 两个用户：<b>另开两个终端分别登录</b>，亲手感受「alice 插入被拒、bob 插入成功、REVOKE 后 bob 也被拒」的完整过程——这是理解 DAC 最快的方式。</p>
+
+<h2>四、自测</h2>
+<div class="quiz" data-quiz='[{"q":"自主存取控制中，授予权限与收回权限的关键字组合是？","opts":["AUDIT 与 REVOKE","GRANT 与 DELETE","GRANT 与 REVOKE","GRANT 与 CHECK"],"a":2,"exp":"DAC 由 GRANT 授权、REVOKE 收权。AUDIT 是审计，CHECK 是完整性约束，DELETE 是删数据。"},{"q":"按强制存取控制（MAC）规则，主体许可证级别等于客体密级时？","opts":["可读可写","只读不写","只写不读","读写都拒"],"a":0,"exp":"MAC 规则：许可证级别 ≥ 密级才可读；仅当许可证级别 = 密级时才可写（防止高密级数据流入低级别）。"},{"q":"视图机制保障安全的主要方式是？","opts":["加快查询速度","隔离敏感列行","自动备份数据","压缩存储空间"],"a":1,"exp":"视图只暴露允许的列/行，把敏感数据隔离在用户可见范围之外，属于间接的安全保护手段。"},{"q":"WITH GRANT OPTION 子句的含义是？","opts":["永久不过期","仅限本机用","自动加索引","可转授他人"],"a":3,"exp":"被授权者获得把该权限再授予其他用户的权利；相应地，上级收回权限时转授链级联回收。"}]'></div>
+
+<h2>五、下一步</h2>
+<div class="tip">
+<b>主资源推荐</b>：中国大学MOOC《数据库系统概论(基础篇)》<a href="https://www.icourse163.org/learn/RUC-488001">icourse163.org/learn/RUC-488001</a>「数据库安全性」讲次（含实验1 安全性控制）。
+</div>
+<p>📖 新术语见 <a href="../reference/glossary.html">术语表</a>。别忘了去本机 MySQL 跑 <code>practice-ch4.sql</code>，亲手体验授权与回收。
+准备好了说「下一章」，进入<b>第5章：数据库完整性</b>——和安全性是一对孪生考点。</p>
+
+<div class="lesson-nav">
+<a href="../index.html">🏠 课程首页</a>
+<a href="../lessons/0003-chapter3-sql.html">← 第3章 SQL 语言</a>
+<a href="0005-chapter5-integrity.html">第5章 数据库完整性 →</a>
+</div>
+</div>
+<script>window.DEMO_SETUP = "CREATE TABLE student(sno TEXT PRIMARY KEY, sname TEXT NOT NULL, ssex TEXT, sage INT);CREATE TABLE sc(sno TEXT, cno TEXT, grade INT, PRIMARY KEY(sno,cno));INSERT INTO student VALUES('S1','张三','男',19),('S2','李四','女',20),('S3','王五','男',19),('S4','赵六','女',21);INSERT INTO sc VALUES('S1','C1',92),('S2','C1',78);";</script>
+<script src="../assets/sqljs/sql-wasm.js"></script>
+<script src="../assets/sqljs/sql-wasm-b64.js"></script>
+<script src="../assets/sql-playground.js"></script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
