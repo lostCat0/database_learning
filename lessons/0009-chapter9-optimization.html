@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第9章 查询处理与查询优化 · 数据库课程</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<p class="meta">数据库课程 · 第 9 章 / 共 11 章 · 预计 30 分钟</p>
+<h1>查询优化：同一条 SQL，快慢天差地别</h1>
+
+<p>你写 <code>SELECT * FROM student JOIN sc ...</code> 时，数据库内部做了什么？为什么有时一瞬、有时半天？
+本章揭秘：查询的<b>处理流程</b>和 DBMS 的<b>自动优化</b>——考点集中在优化规则和代价估算。</p>
+
+<h2>一、查询处理的四个步骤</h2>
+
+<ol>
+<li><b>查询分析</b>：词法、语法检查（SQL 写错在这一步报错）</li>
+<li><b>查询检查</b>：语义检查、权限检查，转为关系代数表达式（查询树）</li>
+<li><b>查询优化</b>：代数优化 + 物理优化，选出执行代价最小的方案</li>
+<li><b>查询执行</b>：按计划执行，返回结果</li>
+</ol>
+
+<div class="exam">「查询优化是 DBMS 自动完成的」是判断题常客：用户写 SQL 时<b>不需要</b>指明执行路径（非过程化语言的价值所在），优化器负责找好方案。关系系统的优化技术：代数优化、物理优化两大类。</div>
+
+<h2>二、代数优化：启发式规则（必背）</h2>
+
+<p>优化器重排关系代数树，核心思想：<b>尽早缩小数据量</b>。五条启发式规则：</p>
+<ol>
+<li><b>选择运算尽可能先做</b>（把行数降下来，后面的运算全部受益）——最重要的一条</li>
+<li><b>投影与选择同时做</b>（避免重复扫描）</li>
+<li>投影与其后/前的连接<b>合并</b>执行</li>
+<li><b>把笛卡尔积改成连接</b>（加上连接条件；笛卡尔积会产生 m×n 的巨量元组）</li>
+<li>找出公共子表达式，只计算一次</li>
+</ol>
+
+<h3>例题：一条 SQL 的优化之旅</h3>
+<pre><code>-- 原始写法（先笛卡尔积再筛选，代价巨大）
+SELECT sname FROM student, sc WHERE student.sno = sc.sno AND sc.grade &gt; 90;
+
+-- 优化器理解过程：
+-- ① 笛卡尔积 student × sc：4 学生 × 6 选课 = 24 行
+-- ② 应用启发式规则：先做选择 σ(grade&gt;90)，只剩 1 行；投影只留 sno
+-- ③ 笛卡尔积改造为连接 ⋈
+-- 代价从「大表全拼」降到「小集合连接」</code></pre>
+
+<h2>三、物理优化：操作怎么执行</h2>
+
+<table>
+<tr><th>操作</th><th>可选算法</th><th>说明</th></tr>
+<tr><td>选择</td><td>全表扫描 / 索引扫描（B+树、哈希）</td><td>有合适索引且选择率高时用索引，否则全表扫描反而更快</td></tr>
+<tr><td>连接</td><td>嵌套循环连接 / 块嵌套循环 / 排序-合并连接 / 索引连接 / 哈希连接</td><td>代价取决于可用内存块数、有无索引、是否已排序</td></tr>
+</table>
+
+<div class="exam">代价估算的基本单位是<b>磁盘块 I/O 次数</b>。经典计算题：给出表块数和内存可用块数，算嵌套循环连接需要读多少块——关键公式：外层读一遍 × 内层读一遍/每块外层元组。</div>
+
+<h2>四、动手实践：亲眼看看索引的威力</h2>
+
+<div class="sql-pg"
+     data-setup="@demo9"
+     data-title="任务 · 生成大数据并使用 EXPLAIN"
+     data-task="运行预设语句：先造 2000 行学生表，再查询 sage=20 的学生。练习场用 SQLite，如需分析执行计划可运行 EXPLAIN QUERY PLAN 查看是否用索引。"
+     data-hint="预设里最后一条是 EXPLAIN QUERY PLAN SELECT sname FROM big_student WHERE sage=20; 注意看 SCAN（全表扫描）。然后运行 CREATE INDEX idx_age ON big_student(sage); 再跑一次 EXPLAIN，对比变化。"
+     ><textarea>SELECT COUNT(*) FROM big_student;
+EXPLAIN QUERY PLAN SELECT sname FROM big_student WHERE sage=20;</textarea></div>
+
+<p>在本机 MySQL 中做同样实验效果更直观（有真实 I/O）：</p>
+<pre><code>USE school_practice;
+CREATE INDEX idx_sage ON student(sage);
+EXPLAIN SELECT * FROM student WHERE sage &gt; 19;   -- 看 key 列显示 idx_sage，type=ref
+-- 对比 DROP INDEX idx_sage ON student; 再 EXPLAIN：type=ALL（全表扫描）</code></pre>
+
+<h2>五、自测</h2>
+<div class="quiz" data-quiz='[{"q":"代数优化最重要的启发式规则是？","opts":["先做笛卡尔积","先做选择投影","先排序再去重","先连接后筛选"],"a":1,"exp":"选择和投影尽早做，能大幅缩小中间结果规模，后续连接/乘积的代价随之降低。笛卡尔积则要尽力改造成连接。"},{"q":"查询优化追求的目标是？","opts":["降低执行代价","提高数据冗余","增加索引数量","减少用户权限"],"a":0,"exp":"代价以磁盘 I/O 为主要度量，优化器在候选执行计划中选代价最小的。索引数量增加不一定更优（维护索引本身有代价）。"},{"q":"有合适索引时，选择操作通常优先采用？","opts":["全表扫描","手工遍历","索引扫描","文件导出"],"a":2,"exp":"索引扫描（B+树、哈希）能快速定位满足条件的元组；但选择率高（要取走大半张表）时全表扫描可能更划算。"},{"q":"DBMS 对 SQL 查询的自动优化发生在？","opts":["数据插入阶段","用户注销阶段","建表定义阶段","查询编译阶段"],"a":3,"exp":"优化发生在查询编译期：分析、检查、生成代数表达式后，优化器选出执行计划，随后才执行。"}]'></div>
+
+<h2>六、下一步</h2>
+<div class="tip">
+<b>主资源推荐</b>：中国大学MOOC《数据库系统概论(高级篇)》<a href="https://www.icourse163.org/learn/RUC-1001964001">icourse163.org/learn/RUC-1001964001</a>「查询处理与优化」讲次。
+</div>
+<p>📖 新术语见 <a href="../reference/glossary.html">术语表</a>。动手部分别跳过：EXPLAIN 是你以后调优 SQL 最常用的工具。
+准备好了说「下一章」，进入<b>第10章：数据库恢复技术</b>——突然断电了，数据怎么办？</p>
+
+<div class="lesson-nav">
+<a href="../index.html">🏠 课程首页</a>
+<a href="../lessons/0008-chapter8-programming.html">← 第8章 数据库编程</a>
+<a href="0010-chapter10-recovery.html">第10章 恢复技术 →</a>
+</div>
+</div>
+<script>window.DEMO_SETUP9 = "CREATE TABLE big_student(sno INT PRIMARY KEY, sname TEXT, sage INT);WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM seq WHERE n&lt;2000) INSERT INTO big_student SELECT n, '学生'||n, 18 + (n % 4) FROM seq;";</script>
+<script>window.DEMO_SETUP = window.DEMO_SETUP9;</script>
+<script src="../assets/sqljs/sql-wasm.js"></script>
+<script src="../assets/sqljs/sql-wasm-b64.js"></script>
+<script src="../assets/sql-playground.js"></script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

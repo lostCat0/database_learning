@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第1章 绪论 · 数据库课程</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<p class="meta">数据库课程 · 第 1 章 / 共 11 章 · 预计 20 分钟</p>
+<h1>绪论：数据库的世界从四个概念开始</h1>
+
+<p>绪论是整门课的地图：先建立起「数据 → 数据库 → DBMS → 数据库系统」的概念骨架，
+再理解数据库为什么比文件系统好，最后掌握本章最重要的考点——<b>三级模式结构与两级映像</b>。</p>
+
+<h2>一、四个基本概念</h2>
+
+<p>这四个概念的辨析几乎每场考试都会以名词解释或选择题出现：</p>
+
+<dl>
+<dt>1. 数据（Data）</dt>
+<dd>数据库中存储的基本对象，是<b>描述事物的符号记录</b>。关键：数据与语义不可分——
+「97」这个数字本身无意义，但「张三的数据库成绩是 97」才有意义。</dd>
+<dt>2. 数据库（DB, Database）</dt>
+<dd><b>长期存储</b>在计算机内、<b>有组织</b>的、<b>可共享</b>的大量数据的集合。
+三个关键词必须记住：永久存储、有组织、可共享。</dd>
+<dt>3. 数据库管理系统（DBMS）</dt>
+<dd>位于用户与操作系统之间的<b>数据管理软件</b>，属于系统软件。
+主要功能：数据定义功能（DDL）、数据操纵功能（DML）、数据库的运行管理、建立与维护等。</dd>
+<dt>4. 数据库系统（DBS）</dt>
+<dd>引入数据库后的<b>整个系统</b> = 数据库 + DBMS（及其开发工具）+ 应用程序 + <b>数据库管理员（DBA）</b>。
+注意：DBS 是最大概念，DB 和 DBMS 都包含在其中。</dd>
+</dl>
+
+<div class="exam">简答题常考「DB、DBMS、DBS 三者关系」：数据库系统（DBS）包含数据库（DB）和数据库管理系统（DBMS）；DBMS 是管理 DB 的软件；DBA 是人员角色。四者层次：DBS ⊃ { DB, DBMS, 应用程序, DBA }。</div>
+
+<h2>二、数据管理技术的三个发展阶段</h2>
+
+<p>数据管理（对数据进行分类、组织、编码、存储、检索、维护）经历了三个阶段。理解每一阶段「为什么不够好」，
+就知道数据库系统好在哪里：</p>
+
+<table>
+<tr><th>阶段</th><th>数据管理方式</th><th>主要特点／问题</th></tr>
+<tr><td>人工管理阶段<br><span class="meta">20世纪50年代前</span></td><td>数据不保存，由程序（应用）自行管理</td><td>数据不共享、不独立；一组数据对应一个程序</td></tr>
+<tr><td>文件系统阶段<br><span class="meta">50年代后期～60年代</span></td><td>数据以文件形式长期保存，由 OS 文件系统管理</td><td>有了一定独立性，但<b>共享性差、冗余度大</b>，数据独立性仍不足</td></tr>
+<tr><td>数据库系统阶段<br><span class="meta">60年代末以来</span></td><td>由统一的数据管理软件（DBMS）集中管理</td><td><b>三高两低一独立</b>：共享性高、冗余度低、独立性强、由 DBMS 统一管理和控制</td></tr>
+</table>
+
+<div class="exam">文件系统与数据库系统的本质区别：文件系统中数据由<b>应用程序</b>负责管理，数据面向应用；数据库系统中数据由<b>DBMS</b>统一管理，数据面向整个系统（可共享）。</div>
+
+<h2>三、数据模型：数据库的核心和基础</h2>
+
+<p>模型是对现实世界的抽象。数据模型分两大类：</p>
+
+<h3>1. 两类模型</h3>
+<ul>
+<li><b>概念模型</b>：按<b>用户的观点</b>建模，用于数据库设计（与现实世界打交道），典型工具是 E-R 图（实体-联系）。</li>
+<li><b>逻辑模型（含物理模型）</b>：按<b>计算机系统</b>的观点建模，用于 DBMS 实现。
+三大经典逻辑模型：<b>层次模型</b>（树）、<b>网状模型</b>（图）、<b>关系模型</b>（二维表，当今主流，MySQL 就是关系型）。</li>
+</ul>
+
+<h3>2. 数据模型三要素（必背）</h3>
+<dl>
+<dt>数据结构</dt><dd>研究对象类型的集合，刻画静态特性——「数据库由什么组成」</dd>
+<dt>数据操作</dt><dd>对数据的操作类型和方式，主要是查询与更新（增删改）——「能对数据做什么」</dd>
+<dt>完整性约束条件</dt><dd>数据及其联系应遵守的规则的集合——「数据必须满足什么规则」</dd>
+</dl>
+
+<div class="exam">选择题高频：给一个模型特征判断属于哪类模型，或问「数据模型的三要素是什么」。关系模型的完整性约束包括：实体完整性、参照完整性、用户定义完整性（第5章展开）。</div>
+
+<h2>四、三级模式结构与两级映像（本章最重要考点）</h2>
+
+<p>数据库系统内部采用「三级模式」组织数据，通过「两级映像」连接，从而获得两种数据独立性。
+先看结构图：</p>
+
+<div class="diagram">
+<svg viewBox="0 0 680 470" xmlns="http://www.w3.org/2000/svg" font-family="PingFang SC, Microsoft YaHei, sans-serif">
+  <!-- 用户层 -->
+  <text x="90" y="34" font-size="14" fill="#5c5850">用户 1</text>
+  <text x="330" y="34" font-size="14" fill="#5c5850">用户 2</text>
+  <rect x="40" y="44" width="160" height="52" rx="8" fill="#e3f0ed" stroke="#0f6b5c" stroke-width="1.5"/>
+  <text x="120" y="76" font-size="15" fill="#2b2a27" text-anchor="middle">外模式 A（视图）</text>
+  <rect x="280" y="44" width="160" height="52" rx="8" fill="#e3f0ed" stroke="#0f6b5c" stroke-width="1.5"/>
+  <text x="360" y="76" font-size="15" fill="#2b2a27" text-anchor="middle">外模式 B（视图）</text>
+  <!-- 箭头：用户 -> 外模式 -->
+  <line x1="90" y1="40" x2="105" y2="44" stroke="#a89f8e" stroke-width="1.2"/>
+
+  <!-- 外模式/模式映像 -->
+  <rect x="120" y="120" width="240" height="40" rx="20" fill="#fdf6e3" stroke="#a8500f" stroke-width="1.5"/>
+  <text x="240" y="146" font-size="14" fill="#a8500f" text-anchor="middle">外模式／模式映像</text>
+  <line x1="120" y1="96" x2="200" y2="120" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="360" y1="96" x2="280" y2="120" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="415" y="145" font-size="13" fill="#0f6b5c">→ 逻辑数据独立性</text>
+
+  <!-- 模式 -->
+  <rect x="180" y="185" width="120" height="48" rx="8" fill="#0f6b5c"/>
+  <text x="240" y="214" font-size="15" fill="#ffffff" text-anchor="middle">模式（全局）</text>
+  <line x1="240" y1="160" x2="240" y2="185" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- 模式/内模式映像 -->
+  <rect x="150" y="258" width="240" height="40" rx="20" fill="#fdf6e3" stroke="#a8500f" stroke-width="1.5"/>
+  <text x="270" y="284" font-size="14" fill="#a8500f" text-anchor="middle">模式／内模式映像</text>
+  <line x1="240" y1="233" x2="240" y2="258" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="435" y="283" font-size="13" fill="#0f6b5c">→ 物理数据独立性</text>
+
+  <!-- 内模式 -->
+  <rect x="180" y="322" width="120" height="48" rx="8" fill="#e3f0ed" stroke="#0f6b5c" stroke-width="1.5"/>
+  <text x="240" y="351" font-size="15" fill="#2b2a27" text-anchor="middle">内模式（存储）</text>
+  <line x1="270" y1="298" x2="250" y2="322" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- 数据库 -->
+  <ellipse cx="240" cy="425" rx="150" ry="26" fill="#f3f1ea" stroke="#5c5850" stroke-width="1.5"/>
+  <text x="240" y="431" font-size="14" fill="#5c5850" text-anchor="middle">实际存储的数据（DB）</text>
+  <line x1="240" y1="370" x2="240" y2="398" stroke="#5c5850" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="#5c5850"/>
+    </marker>
+  </defs>
+</svg>
+</div>
+
+<h3>三级模式（从外到内）</h3>
+<dl>
+<dt>外模式（子模式／用户模式）</dt>
+<dd>用户能看见和使用的<b>局部数据</b>的逻辑结构描述。<b>一个数据库可以有多个外模式</b>，每个用户只能看到与自己相关的外模式——这也是安全保护的一道屏障。</dd>
+<dt>模式（逻辑模式）</dt>
+<dd>数据库中<b>全体数据</b>的逻辑结构和特征的描述，是所有用户的公共数据视图。<b>一个数据库只有一个模式</b>。</dd>
+<dt>内模式（存储模式）</dt>
+<dd>数据<b>物理结构和存储方式</b>的描述。<b>一个数据库只有一个内模式</b>。</dd>
+</dl>
+
+<h3>两级映像与数据独立性</h3>
+<dl>
+<dt>外模式／模式映像</dt>
+<dd>当模式改变时，由 DBA 修改此映像，外模式可保持不变 → 应用程序不用改 → <b>逻辑数据独立性</b></dd>
+<dt>模式／内模式映像</dt>
+<dd>当存储结构改变时，修改此映像，模式可保持不变 → <b>物理数据独立性</b></dd>
+</dl>
+
+<div class="exam">本章最高频考点：① 三级模式各是什么、各有多少个（模式与内模式唯一，外模式可有多个）；② 两种数据独立性分别由哪个映像保证——<b>逻辑独立性靠外模式／模式映像，物理独立性靠模式／内模式映像</b>。记忆口诀：「映像在哪一侧断了联系，哪一侧就不用改」。</div>
+
+<h2>五、与 MySQL 的联系</h2>
+<p>本章理论在 MySQL 中的对应物：</p>
+<pre><code>-- 外模式：CREATE VIEW 创建的视图（第3章细讲）
+CREATE VIEW student_scores AS SELECT name, score FROM student;
+
+-- 模式：你创建的表
+CREATE TABLE student (id INT PRIMARY KEY, name VARCHAR(50), score INT);
+
+-- 内模式：MySQL 自动决定 InnoDB 如何在磁盘上存储（.ibd 文件、B+ 树索引）
+-- 用户完全不需要关心——这正是数据独立性的体现</code></pre>
+<p>你写 SQL 时永远只面对模式（表），不用管数据怎么存的——这就是本章理论在真实系统中的样子。</p>
+
+<h2>六、自测</h2>
+<div class="quiz" data-quiz='[{"q":"管理数据库的软件 DBMS，下面哪个是它正确的英文全称缩写？","opts":["DBSA","DMBS","DBMS","MDMS"],"a":2,"exp":"DBMS = Database Management System。注意区分：DBA 是数据库管理员（人），DBS 是数据库系统（整体）。"},{"q":"数据库中全体数据的公共数据视图，对应三级模式中的哪一个？","opts":["外部模式","概念模式","内部模式","存储模式"],"a":1,"exp":"模式又称逻辑模式/概念模式，是全体数据的公共视图，全局且唯一。外模式是局部视图，内模式描述物理存储。"},{"q":"逻辑数据独立性是由哪一个映像来保证的？","opts":["模式与内模式间的映像","存储结构与模式间映像","外模式与模式间的映像","用户视图与内模式映像"],"a":2,"exp":"外模式/模式映像保证逻辑数据独立性：模式变，改映像，外模式与应用不变。模式/内模式映像保证的是物理独立性。"},{"q":"关系模型从数据模型的分类上看，属于哪一类？","opts":["概念数据模型","逻辑数据模型","物理数据模型","应用数据模型"],"a":1,"exp":"关系模型、层次模型、网状模型都属于逻辑模型；概念模型是面向用户设计的 E-R 模型。"},{"q":"以下哪一项不属于数据模型的三要素？","opts":["数据加密","数据操作","数据结构","约束条件"],"a":0,"exp":"三要素是数据结构、数据操作、完整性约束条件。数据加密属于安全性控制手段，与三要素无关。"}]'></div>
+
+<h2>七、下一步</h2>
+<div class="tip">
+<b>主资源推荐</b>：观看中国大学MOOC《数据库系统概论(基础篇)》（中国人民大学 王珊主讲）
+<a href="https://www.icourse163.org/learn/RUC-488001">icourse163.org/learn/RUC-488001</a> 的「绪论」讲次视频，与本章内容完全对应。
+</div>
+<p>📖 精确术语定义请查 <a href="../reference/glossary.html">术语表</a>。做完自测后，回到对话告诉我你的得分和疑问——
+我就是你的老师，任何不懂的地方随时问。准备好了说「下一章」，我们进入<b>第2章：关系数据库与关系代数</b>。</p>
+
+<div class="lesson-nav">
+<a href="../index.html">🏠 课程首页</a>
+<a href="../reference/glossary.html">← 术语表</a>
+<a href="0002-chapter2-relational-model.html">第2章 关系数据库 →</a>
+</div>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

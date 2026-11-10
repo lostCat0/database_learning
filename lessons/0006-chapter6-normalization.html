@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第6章 关系数据理论（范式） · 数据库课程</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<div class="wrap">
+<p class="meta">数据库课程 · 第 6 章 / 共 11 章 · 预计 50 分钟（理论巅峰章，多做题少背书）</p>
+<h1>范式：什么样的表才算「好表」</h1>
+
+<p>本章回答一个设计问题：<b>一张表怎样设计才不会出毛病</b>。判断依据是函数依赖与范式。
+这是全课程理论难度最高、考试分值最重的章节——但它的思考方式很朴素：一张表如果又存学生又存课程又存成绩，
+改一处就要改多处（更新异常），删一条记录可能丢掉无关信息（删除异常）。范式就是消除这些毛病的设计标准。</p>
+
+<h2>一、函数依赖（FD）：一切的起点</h2>
+
+<p><b>函数依赖 X → Y</b>：在表中，X 的值一旦确定，Y 的值就被唯一确定（一个学号只对应一个姓名 → 学号 → 姓名）。</p>
+<dl>
+<dt>完全函数依赖 / 部分函数依赖</dt>
+<dd>Y 依赖整个 X 才成立 → 完全依赖；(学号, 课程号) → 成绩 是完全依赖；而 (学号,课程号) → 姓名 只依赖学号部分 → <b>部分函数依赖</b>（部分依赖是坏味道的根源）。</dd>
+<dt>传递函数依赖</dt>
+<dd>学号 → 系别，系别 → 系主任，且系别 ↛ 学号 → 学号<b>传递</b>依赖于系主任。传递依赖也是坏味道。</dd>
+<dt>候选码（用 FD 推）</dt>
+<dd>能决定所有属性的最小属性组。推理工具：Armstrong 公理（自反、增广、传递），实际解题用「求闭包」：从属性组出发看能推出哪些属性。</dd>
+</dl>
+
+<h2>二、范式阶梯（逐级收紧）</h2>
+
+<table>
+<tr><th>范式</th><th>要求</th><th>消除的问题</th></tr>
+<tr><td>1NF</td><td>每个分量不可再分（原子性）</td><td>表中有复合属性</td></tr>
+<tr><td>2NF</td><td>在 1NF 基础上，<b>消除非主属性对码的部分依赖</b></td><td>部分依赖</td></tr>
+<tr><td>3NF</td><td>在 2NF 基础上，<b>消除非主属性对码的传递依赖</b></td><td>传递依赖</td></tr>
+<tr><td>BCNF</td><td>每个函数依赖的决定因素（左部）都包含候选码</td><td>主属性对码的依赖</td></tr>
+</table>
+
+<p class="meta">包含关系：BCNF ⊂ 3NF ⊂ 2NF ⊂ 1NF。</p>
+
+<h3>经典例题走一遍（考试原题型）</h3>
+<p>表 <code>SC(sno, cno, sname, grade)</code>，其中学号决定姓名：sno → sname；码是 (sno, cno)。</p>
+<ul>
+<li>grade 完全依赖码 → 合格；但 <b>sname 部分依赖码</b>（只依赖 sno）→ 只到 1NF。
+<li>分解为 <code>Student(sno, sname)</code> + <code>SC(sno, cno, grade)</code> → 消除部分依赖 → 达到 <b>2NF</b>。</li>
+</ul>
+<p>表 <code>SD(sno, sdept, sloc)</code>，sno → sdept，sdept → sloc：</p>
+<ul>
+<li>无部分依赖（码是单个 sno）→ 已是 2NF；但 sno → sdept → sloc 是<b>传递依赖</b> → 不是 3NF。</li>
+<li>分解为 <code>SD1(sno, sdept)</code> + <code>DEPT(sdept, sloc)</code> → 达到 <b>3NF</b>。</li>
+</ul>
+
+<div class="exam">解题流程口诀：① 找出所有函数依赖 → ② 求候选码（闭包法）→ ③ 检查非主属性对码有没有「部分依赖」（有则非 2NF）→ ④ 检查有没有「传递依赖」（有则非 3NF）→ ⑤ BCNF 看每个依赖左部是否含候选码。<b>分解时保持「无损连接」是底线，最好也保持函数依赖。</b></div>
+
+<h2>三、动手实践：关系代数视角看分解</h2>
+
+<p>范式分解本质是把一张大表投影（π）成几张小表——用练习场亲眼验证「分解前后信息不丢失」（无损连接）：</p>
+
+<div class="sql-pg"
+     data-setup="@demo6"
+     data-title="任务 · 模拟 2NF 分解"
+     data-task="原表 bad_sc(sno,cno,sname,grade) 存在部分依赖（sno→sname）。运行预设查询观察冗余，然后按提示写出两条 CREATE TABLE + INSERT 完成分解，再用 JOIN 合并验证与原表信息一致。"
+     data-hint="CREATE TABLE st2 AS SELECT DISTINCT sno, sname FROM bad_sc; CREATE TABLE sc2 AS SELECT sno, cno, grade FROM bad_sc; 然后验证：SELECT b.sno, s.sname, b.grade FROM sc2 b JOIN st2 s ON b.sno = s.sno ORDER BY b.sno, b.cno;"
+     data-expect="S1,C1,张三,92;S1,C2,张三,85;S2,C1,李四,78;S2,C2,李四,88"><textarea>SELECT * FROM bad_sc;</textarea></div>
+
+<p>注意看预设查询的输出：张三、李四的姓名随着每门课<b>重复存储</b>——如果李四改名，就要改两行，漏改一处数据就自相矛盾。这就是部分依赖导致的「更新异常」，分解后消失。</p>
+
+<h2>四、自测</h2>
+<div class="quiz" data-quiz='[{"q":"「学号确定则姓名唯一确定」，这种依赖称为？","opts":["多值依赖","函数依赖","传递依赖","连接依赖"],"a":1,"exp":"X→Y 表示 X 的值确定后 Y 值唯一确定，即函数依赖。传递依赖是函数依赖的一种特殊情况。"},{"q":"消除了非主属性对码的部分函数依赖后，达到的是？","opts":["第二范式","第三范式","BC 范式","第四范式"],"a":0,"exp":"1NF→消除部分依赖→2NF→消除传递依赖→3NF→每个决定因素含候选码→BCNF。"},{"q":"在 2NF 基础上消除了传递函数依赖的关系模式属于？","opts":["第二范式","第四范式","第三范式","BC 范式"],"a":2,"exp":"3NF 的定义：属于 2NF 且每个非主属性都不传递依赖于码。"},{"q":"BCNF 的判别标准是：每个函数依赖的决定因素都是？","opts":["非主属性","候选码","任意属性","外码属性"],"a":1,"exp":"BCNF 要求每个依赖 X→Y 的左部 X 都包含某个候选码，比 3NF 更严格，能消除主属性对码的依赖。"}]'></div>
+
+<h2>五、下一步</h2>
+<div class="tip">
+<b>主资源推荐</b>：中国大学MOOC《数据库系统概论(高级篇)》<a href="https://www.icourse163.org/learn/RUC-1001964001">icourse163.org/learn/RUC-1001964001</a>「关系数据理论」讲次——范式属于高级篇内容，视频里有完整例题推导。
+</div>
+<p>📖 新术语见 <a href="../reference/glossary.html">术语表</a>。范式题重在<b>动手推</b>：把课后题的函数依赖找出来，用闭包法求候选码，套上面的流程走一遍。想让我出几道判范式题练习，直接说。
+准备好了说「下一章」，进入<b>第7章：数据库设计</b>——把范式和 E-R 图串成完整的工程方法。</p>
+
+<div class="lesson-nav">
+<a href="../index.html">🏠 课程首页</a>
+<a href="../lessons/0005-chapter5-integrity.html">← 第5章 数据库完整性</a>
+<a href="0007-chapter7-design.html">第7章 数据库设计 →</a>
+</div>
+</div>
+<script>window.DEMO_SETUP6 = "CREATE TABLE bad_sc(sno TEXT, cno TEXT, sname TEXT, grade INT);INSERT INTO bad_sc VALUES('S1','C1','张三',92),('S1','C2','张三',85),('S2','C1','李四',78),('S2','C2','李四',88);";</script>
+<script>window.DEMO_SETUP = window.DEMO_SETUP6;</script>
+<script src="../assets/sqljs/sql-wasm.js"></script>
+<script src="../assets/sqljs/sql-wasm-b64.js"></script>
+<script src="../assets/sql-playground.js"></script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

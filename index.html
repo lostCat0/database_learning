@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据库系统课程 · 11 章完全学习路径</title>
+<link rel="stylesheet" href="assets/course.css">
+<style>
+  .hero { padding: 48px 0 8px; }
+  .hero h1 { border: none; margin-bottom: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin: 2em 0; }
+  .card {
+    display: block; background: #fff; border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 18px 20px; text-decoration: none; color: var(--ink);
+    transition: all .15s;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 2px 10px rgba(15,107,92,.12); transform: translateY(-2px); }
+  .card .num { font-family: "JetBrains Mono", Consolas, monospace; color: var(--accent); font-weight: 700; }
+  .card h3 { margin: 4px 0 8px; font-size: 1.05rem; }
+  .card p { margin: 0; font-size: .88rem; color: var(--ink-soft); line-height: 1.6; }
+  .card.extra { background: var(--accent-soft); border-color: transparent; }
+  .badge { display: inline-block; font-size: .75rem; background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 2px 10px; margin-left: 8px; font-family: "PingFang SC","Microsoft YaHei",sans-serif; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="hero">
+  <p class="meta">理论考点 × 动手实践 · 以王珊《数据库系统概论》章节体系为主线 · MySQL 环境</p>
+  <h1>数据库系统课程 🗺️</h1>
+  <p>从零开始的 11 章系统学习路径：每章包含<b>考点讲解</b>（标 ★ 的都是常考内容）、<b>交互自测</b>、
+  以及可直接运行的 <b>SQL 动手任务</b>——课程内嵌了浏览器 SQL 练习场（SQLite 引擎），写完立刻出结果、自动批改。</p>
+</div>
+
+<div class="grid">
+  <a class="card" href="lessons/0001-chapter1-introduction.html">
+    <span class="num">第 1 章</span><span class="badge">20 分钟</span>
+    <h3>绪论</h3>
+    <p>四个基本概念、数据管理三阶段、数据模型、三级模式与两级映像（本章最重要考点）</p>
+  </a>
+  <a class="card" href="lessons/0002-chapter2-relational-model.html">
+    <span class="num">第 2 章</span><span class="badge">30 分钟</span>
+    <h3>关系数据库</h3>
+    <p>域→笛卡尔积→关系、三类完整性、关系代数 σ π ⋈ ÷ 全解析</p>
+  </a>
+  <a class="card" href="lessons/0003-chapter3-sql.html">
+    <span class="num">第 3 章</span><span class="badge">60 分钟 · 6 个任务</span>
+    <h3>SQL 语言</h3>
+    <p>DDL/DML/DCL、SELECT 七大子句与执行顺序、连接、视图，全程动手</p>
+  </a>
+  <a class="card" href="lessons/0004-chapter4-security.html">
+    <span class="num">第 4 章</span><span class="badge">35 分钟</span>
+    <h3>数据库安全性</h3>
+    <p>自主/强制存取控制、GRANT/REVOKE、视图机制、审计与加密</p>
+  </a>
+  <a class="card" href="lessons/0005-chapter5-integrity.html">
+    <span class="num">第 5 章</span><span class="badge">40 分钟 · 3 个任务</span>
+    <h3>数据库完整性</h3>
+    <p>三类完整性体系、CHECK、触发器实战、断言</p>
+  </a>
+  <a class="card" href="lessons/0006-chapter6-normalization.html">
+    <span class="num">第 6 章</span><span class="badge">50 分钟 · 理论巅峰</span>
+    <h3>关系数据理论（范式）</h3>
+    <p>函数依赖、闭包求候选码、1NF→2NF→3NF→BCNF 判定与分解</p>
+  </a>
+  <a class="card" href="lessons/0007-chapter7-design.html">
+    <span class="num">第 7 章</span><span class="badge">40 分钟</span>
+    <h3>数据库设计</h3>
+    <p>设计六阶段、E-R 图三要素与集成冲突、E-R 转关系模式规则</p>
+  </a>
+  <a class="card" href="lessons/0008-chapter8-programming.html">
+    <span class="num">第 8 章</span><span class="badge">40 分钟</span>
+    <h3>数据库编程</h3>
+    <p>嵌入式 SQL、存储过程、游标四步曲、触发器审计</p>
+  </a>
+  <a class="card" href="lessons/0009-chapter9-optimization.html">
+    <span class="num">第 9 章</span><span class="badge">30 分钟</span>
+    <h3>查询处理与优化</h3>
+    <p>查询处理四步骤、代数优化启发式规则、物理优化与 EXPLAIN 实验</p>
+  </a>
+  <a class="card" href="lessons/0010-chapter10-recovery.html">
+    <span class="num">第 10 章</span><span class="badge">30 分钟</span>
+    <h3>数据库恢复技术</h3>
+    <p>事务 ACID、故障分类、转储与日志、检查点、UNDO/REDO</p>
+  </a>
+  <a class="card" href="lessons/0011-chapter11-concurrency.html">
+    <span class="num">第 11 章</span><span class="badge">40 分钟 · 收官</span>
+    <h3>并发控制</h3>
+    <p>并发四问题、S/X 锁与三级封锁协议、两段锁协议、死锁与等待图</p>
+  </a>
+  <a class="card extra" href="reference/glossary.html">
+    <span class="num">附录</span>
+    <h3>📖 全程术语表</h3>
+    <p>11 章全部术语的精确定义，复习时当清单逐项自测</p>
+  </a>
+</div>
+
+<p class="meta">配套实战脚本（需本机 MySQL）：assets/practice-ch3.sql · practice-ch4.sql · practice-ch8.sql ·
+主视频资源：中国大学MOOC《数据库系统概论》(中国人民大学 王珊主讲)</p>
+</div>
+</body>
+</html>
